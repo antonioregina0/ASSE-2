@@ -259,7 +259,43 @@
       .grid{ grid-template-columns: 1fr; }
       h1{font-size:20px;}
     }
-  
+
+    /* ===== Login screen ===== */
+    #loginScreen{
+      position:fixed; inset:0; z-index:99999;
+      background: radial-gradient(1200px 800px at 20% 10%, rgba(110,168,254,.18), transparent 55%),
+                  radial-gradient(900px 600px at 80% 30%, rgba(51,209,122,.14), transparent 55%),
+                  var(--bg);
+      display:flex; align-items:center; justify-content:center; padding:24px;
+    }
+    #loginScreen.hidden{ display:none; }
+    .loginCard{
+      width:min(400px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border:1px solid var(--border);
+      border-radius:20px;
+      padding:32px 28px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.5);
+      text-align:center;
+    }
+    .loginCard h2{ margin:0 0 6px; font-size:22px; }
+    .loginCard p{ color:var(--muted); font-size:13px; margin:0 0 24px; }
+    .loginCard input{
+      width:100%; padding:13px 16px; border-radius:14px;
+      border:1px solid var(--border); background:rgba(0,0,0,.25);
+      color:var(--text); font-size:16px; outline:none;
+      text-align:center; letter-spacing:4px;
+      margin-bottom:14px; box-sizing:border-box;
+    }
+    .loginCard input:focus{ border-color: var(--accent); }
+    .loginCard button{
+      width:100%; padding:13px; font-size:15px;
+      border-radius:14px; font-weight:700;
+    }
+    .loginError{
+      color:var(--bad); font-size:13px; margin-top:10px; min-height:18px;
+    }
+
     /* ===== Archive modal ===== */
     .modal{position:fixed; inset:0; background:rgba(0,0,0,.65); display:flex; align-items:flex-start; justify-content:center; padding:18px; z-index:9999;}
     .modal.hidden{display:none;}
@@ -285,6 +321,20 @@
 
 </head>
 <body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen">
+  <div class="loginCard">
+    <div style="font-size:42px; margin-bottom:12px;">🔒</div>
+    <h2>DC/TMD – Asse II</h2>
+    <p>Inserisci il codice di accesso per continuare</p>
+    <input type="password" id="pwdInput" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter') checkPassword()" autocomplete="current-password" />
+    <button onclick="checkPassword()">Accedi</button>
+    <div class="loginError" id="loginError"></div>
+  </div>
+</div>
+
 <header>
   <div class="wrap">
     <h1>DC/TMD – Asse II (Questionario digitale con scoring)</h1>
@@ -318,6 +368,87 @@
    DC/TMD Axis II – Mobile Web Form + Scoring
    Single-file offline app
    =========================== */
+
+// ===== PASSWORD CONFIGURATION =====
+// Cambia questa stringa per modificare la password
+const ACCESS_PASSWORD = "dctmd2024";
+const SESSION_KEY = "dc_tmd_auth_v1";
+
+function checkPassword(){
+  const input = document.getElementById("pwdInput").value;
+  if(input === ACCESS_PASSWORD){
+    sessionStorage.setItem(SESSION_KEY, "ok");
+    document.getElementById("loginScreen").classList.add("hidden");
+    document.getElementById("loginError").textContent = "";
+  } else {
+    document.getElementById("loginError").textContent = "Codice errato. Riprova.";
+    document.getElementById("pwdInput").value = "";
+    document.getElementById("pwdInput").focus();
+  }
+}
+
+// Check if already authenticated in this session
+(function(){
+  if(sessionStorage.getItem(SESSION_KEY) !== "ok"){
+    // Show login, wait for password
+  } else {
+    document.getElementById("loginScreen").classList.add("hidden");
+  }
+})();
+
+// ===== GOOGLE SHEETS CONFIGURATION =====
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzyUrAjRn605gq-53Of8TXdwy7_28ikACt6K-OKp4I7c7hMQZawu9_jaPDJnTPwgRkmzw/exec";
+
+async function sendToGoogleSheets(reportData){
+  const flat = {
+    timestamp: reportData.timestamp,
+    cognome: reportData.meta?.lastName || "",
+    nome: reportData.meta?.firstName || "",
+    codice: reportData.meta?.patientId || "",
+    telefono: reportData.meta?.phone || "",
+    dataNascita: reportData.meta?.dob || "",
+    dataCompilazione: reportData.meta?.date || "",
+    sesso: reportData.meta?.sex || "",
+    // GCPS
+    gcps_CPI: reportData.scores?.GCPS_v2?.CPI_0_100 ?? "",
+    gcps_Interferenza: reportData.scores?.GCPS_v2?.Interference_0_100 ?? "",
+    gcps_PuntiGiorni: reportData.scores?.GCPS_v2?.DisabilityDaysPoints_0_3 ?? "",
+    gcps_PuntiInterferenza: reportData.scores?.GCPS_v2?.InterferencePoints_0_3 ?? "",
+    gcps_PuntiTotali: reportData.scores?.GCPS_v2?.TotalDisabilityPoints_0_6 ?? "",
+    gcps_Grado: reportData.scores?.GCPS_v2?.Grade ?? "",
+    // JFLS
+    jfls8_Media: reportData.scores?.JFLS_8?.Mean_0_10 ?? "",
+    jfls20_Masticazione: reportData.scores?.JFLS_20?.Mastication_0_10 ?? "",
+    jfls20_Mobilita: reportData.scores?.JFLS_20?.Mobility_0_10 ?? "",
+    jfls20_Comunicazione: reportData.scores?.JFLS_20?.Communication_0_10 ?? "",
+    jfls20_Globale: reportData.scores?.JFLS_20?.Global_AllItems_0_10 ?? "",
+    // PHQ/GAD
+    phq4_Totale: reportData.scores?.PHQ_4?.Total_0_12 ?? "",
+    phq4_Severita: reportData.scores?.PHQ_4?.Severity ?? "",
+    phq9_Totale: reportData.scores?.PHQ_9?.Total_0_27 ?? "",
+    phq9_Severita: reportData.scores?.PHQ_9?.Severity ?? "",
+    phq9_Item9: reportData.scores?.PHQ_9?.Item9_SelfHarm ?? "",
+    gad7_Totale: reportData.scores?.GAD_7?.Total_0_21 ?? "",
+    gad7_Severita: reportData.scores?.GAD_7?.Severity ?? "",
+    phq15_Totale: reportData.scores?.PHQ_15?.Total_0_30 ?? "",
+    phq15_Severita: reportData.scores?.PHQ_15?.Severity ?? "",
+    // OBC
+    obc_Totale: reportData.scores?.OBC_method2?.Total_0_84 ?? "",
+    obc_Categoria: reportData.scores?.OBC_method2?.Category ?? "",
+  };
+  try {
+    await fetch(SCRIPT_URL, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(flat),
+    });
+    return true;
+  } catch(e) {
+    return false;
+  }
+}
+
 
 // ===== PWA: install prompt + service worker =====
 let deferredInstallEvent = null;
@@ -1575,6 +1706,13 @@ function renderSummary(section){
       </div>
     </div>
 
+    <div style="margin-top:16px;">
+      <button id="sendSheetBtn" onclick="handleSendToSheets()" style="width:100%; padding:14px; font-size:15px; font-weight:800; border-radius:14px; background:rgba(51,209,122,.2); border:1px solid rgba(51,209,122,.4);">
+        📤 Invia dati al database Google Sheets
+      </button>
+      <div id="sendSheetMsg" style="text-align:center; font-size:13px; margin-top:8px; min-height:18px;"></div>
+    </div>
+
     <div class="small" style="margin-top:12px;">
       <b>Privacy / GDPR:</b> questa demo non invia dati a server esterni. Se userai strumenti cloud (Google/Microsoft) per la raccolta, valuta informativa e misure di sicurezza.
     </div>
@@ -1669,6 +1807,29 @@ function printReport(){
   w.document.open();
   w.document.write(html);
   w.document.close();
+}
+
+async function handleSendToSheets(){
+  const btn = document.getElementById("sendSheetBtn");
+  const msg = document.getElementById("sendSheetMsg");
+  if(!btn || !msg) return;
+  btn.disabled = true;
+  btn.textContent = "⏳ Invio in corso...";
+  msg.style.color = "var(--muted)";
+  msg.textContent = "Connessione al database...";
+  const rep = buildReport();
+  const ok = await sendToGoogleSheets(rep);
+  if(ok){
+    btn.textContent = "✅ Dati inviati!";
+    btn.style.background = "rgba(51,209,122,.3)";
+    msg.style.color = "var(--ok)";
+    msg.textContent = "I dati sono stati salvati nel tuo Google Sheet.";
+  } else {
+    btn.disabled = false;
+    btn.textContent = "📤 Invia dati al database Google Sheets";
+    msg.style.color = "var(--bad)";
+    msg.textContent = "Errore di connessione. Controlla la rete e riprova.";
+  }
 }
 
 // ========= init =========
