@@ -1,4 +1,4 @@
-const CACHE = "dc-tmd-axis2-v1";
+const CACHE = "dc-tmd-axis2-v2";
 const ASSETS = [
   "/",
   "/index.html",
