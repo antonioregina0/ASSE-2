@@ -1025,13 +1025,6 @@
             }
 
             async syncToSheets(consent) {
-                if (this.sheetsWebhookUrl.includes('AKfycbzqEPTAUjjlBaLt6pSQldd8Y4kobp4Wsd_LnuV8sFEMdulmrCy7E11JrnE1bWCRdN79')) {
-                    throw new Error(
-                        'Configurazione mancante: Webhook Google Sheets non configurato. ' +
-                        'Contatta l\'amministratore dello studio per completare la configurazione.'
-                    );
-                }
-
                 try {
                     const response = await fetch(this.sheetsWebhookUrl, {
                         method: 'POST',
@@ -1176,10 +1169,6 @@
 
             async function syncFormToSheets(formData) {
                 const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/d/AKfycbzqEPTAUjjlBaLt6pSQldd8Y4kobp4Wsd_LnuV8sFEMdulmrCy7E11JrnE1bWCRdN79/usercallable';
-                
-                if (SHEETS_WEBHOOK_URL.includes('AKfycbzqEPTAUjjlBaLt6pSQldd8Y4kobp4Wsd_LnuV8sFEMdulmrCy7E11JrnE1bWCRdN79')) {
-                    return;
-                }
 
                 const response = await fetch(SHEETS_WEBHOOK_URL, {
                     method: 'POST',
