@@ -941,7 +941,7 @@
                 this.menuBtn = document.getElementById('privacyMenuBtn');
                 this.statusEl = document.getElementById('consentStatus');
                 this.mainForm = document.getElementById('mainForm');
-                this.sheetsWebhookUrl = 'https://script.google.com/macros/d/AKfycbzqEPTAUjjlBaLt6pSQldd8Y4kobp4Wsd_LnuV8sFEMdulmrCy7E11JrnE1bWCRdN79/usercallable';
+                this.sheetsWebhookUrl = 'https://script.google.com/macros/s/AKfycbzNq635zD9UJHjDIdcgKWNuU2Ac0H4SCBkEP9pwRp0gg_ZWMC27pMJCOQPYmnNs6cro/exec';
 
                 this.init();
             }
@@ -1168,7 +1168,7 @@
             });
 
             async function syncFormToSheets(formData) {
-                const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/d/AKfycbzqEPTAUjjlBaLt6pSQldd8Y4kobp4Wsd_LnuV8sFEMdulmrCy7E11JrnE1bWCRdN79/usercallable';
+                const SHEETS_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbzNq635zD9UJHjDIdcgKWNuU2Ac0H4SCBkEP9pwRp0gg_ZWMC27pMJCOQPYmnNs6cro/exec';
 
                 const response = await fetch(SHEETS_WEBHOOK_URL, {
                     method: 'POST',
